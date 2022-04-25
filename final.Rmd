@@ -1,0 +1,708 @@
+---
+title: "stat5010 Final Project"
+author: "Chanthrika Palanisamy"
+output: pdf_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+library(quantmod)
+library(xts)
+library(zoo)
+library(tidyverse)
+library(MASS) 
+library(AER)
+library(ggplot2)
+library(dplyr)
+require(caret)    
+library(yardstick)
+library(rvest)
+library(tidyverse)
+library(tidyquant)
+library(stringr)
+library(forcats)
+library(lubridate)
+library(plotly)
+library(dplyr)
+library(MASS)
+library(magrittr)
+library(PerformanceAnalytics)
+library(memisc)
+library(tseries)
+library(PortfolioAnalytics)
+library(Quandl)
+library(DEoptim)
+library(ggpubr)
+theme_set(theme_pubr())
+library(Hmisc)
+library(prophet)
+library(dplyr)
+library(purrr)
+library(tidyr)
+library(corrplot)
+```
+
+# STOCK PRICE pREDICTION: AFTER RUSSIA - UKRAINE CONFLICT
+
+##Experts says oil prices hiked were other sectors like health care, Utilities followed their usual trend with a little drop. Lets see howfar it is legit!
+
+# INTRODUCTION
+
+###Stock prices are lower and energy prices are higher, in response to Russia's invasion of Ukraine. The U.S. stock market opened sharply lower, while crude oil prices topped $100 a barrel. RACHEL MARTIN, HOST: Russia's invasion of Ukraine has roiled financial markets around the world and sent energy prices soaring.
+
+![Caption for the picture.](C:/Users/chant/Documents/STOCK.jpg)
+
+
+### In this project I considered 7 sectors,
+
+#1.  Energy Sector: Example took to represent the sector is Phillips66(PSX)
+#2.  Technology Sector: Example took to represent the sector is Apple(AAPL)
+#3.  Utilities Sector: Example took to represent the sector is Xcel Energy(XEL)
+#4.  Health Care Sector: Example took to represent the sector is CVS Pharmacy(CVS)
+#5.  Communication Services Sector: Example took to represent the sector is Alphabet Inc Class A(GOOG)
+#6.  Consumer Discretionary Sector: Example took to represent the sector is Tesla(TSLA)
+#7.  Consumer Staples Sector: Example took to represent the sector is Cocacola(KO)
+
+
+# 1.    DATA COLLECTION:
+
+###The project import data and built-in functions from "quantmod' library. Quantmod library import stock data from yahoo finance  that were used in the report. The variables of the data:  
+
+**Closing Price** is the closing price of the day when the market closes at 4:00PM  
+**Opening Price** is the opening price of the day when the market opens at 9:30AM  
+**High and Low** Price are the highest and lowest price traded during the day, respectively  
+**Volume** which are the amount of shares being bought and sold during the day  
+**Adjusted Price** is the price reflect that stock's value after accounting for any corporate actions such as stock splits, dividends / distributions and rights offerings
+
+```{r}
+getSymbols("XEL",from="2009-03-06",to="2022-03-25", src='yahoo')
+getSymbols("AAPL",from="2009-03-06",to="2022-03-25", src='yahoo')
+getSymbols("GOOG",from="2009-03-06",to="2022-03-25", src='yahoo')
+getSymbols("AMT",from="2009-03-06",to="2022-03-25", src='yahoo')
+getSymbols("CVS",from="2009-03-06",to="2022-03-25", src='yahoo')
+getSymbols("KO",from="2009-03-06",to="2022-03-25", src='yahoo')
+getSymbols("PSX",from="2009-03-06",to="2022-03-25", src='yahoo')
+getSymbols("TSLA",from="2009-03-06",to="2022-03-25", src='yahoo')
+XEL = data.frame(Date=index(XEL),coredata(XEL))
+XEL$Date <- sapply(XEL$Date, as.character)
+names(XEL) <- c('Date', 'Open','High','Low','Close','Volume','Adj.Close')
+XEL <- XEL%>%mutate(Date = as.Date(Date)) %>%
+  complete(Date = seq.Date(min(Date), max(Date), by="day"))
+AAPL = data.frame(Date=index(AAPL),coredata(AAPL))
+AAPL$Date <- sapply(AAPL$Date, as.character)
+AAPL<-AAPL%>%mutate(Date = as.Date(Date)) %>%
+  complete(Date = seq.Date(min(Date), max(Date), by="day"))
+names(AAPL) <- c('Date', 'Open','High','Low','Close','Volume','Adj.Close')
+AMT = data.frame(Date=index(AMT),coredata(AMT))
+AMT$Date <- sapply(AMT$Date, as.character)
+AMT <- AMT%>%mutate(Date = as.Date(Date)) %>%
+  complete(Date = seq.Date(min(Date), max(Date), by="day"))
+names(AMT) <- c('Date', 'Open','High','Low','Close','Volume','Adj.Close')
+CVS = data.frame(Date=index(CVS),coredata(CVS))
+CVS$Date <- sapply(CVS$Date, as.character)
+CVS<-CVS%>%mutate(Date = as.Date(Date)) %>%
+  complete(Date = seq.Date(min(Date), max(Date), by="day"))
+names(CVS) <- c('Date', 'Open','High','Low','Close','Volume','Adj.Close')
+KO = data.frame(Date=index(KO),coredata(KO))
+KO$Date <- sapply(KO$Date, as.character)
+KO<-KO%>%mutate(Date = as.Date(Date)) %>%
+  complete(Date = seq.Date(min(Date), max(Date), by="day"))
+names(KO) <- c('Date', 'Open','High','Low','Close','Volume','Adj.Close')
+PSX = data.frame(Date=index(PSX),coredata(PSX))
+PSX$Date <- sapply(PSX$Date, as.character)
+PSX <- PSX%>%mutate(Date = as.Date(Date)) %>%
+  complete(Date = seq.Date(min(Date), max(Date), by="day"))
+names(PSX) <- c('Date', 'Open','High','Low','Close','Volume','Adj.Close')
+TSLA = data.frame(Date=index(TSLA),coredata(TSLA))
+TSLA$Date <- sapply(TSLA$Date, as.character)
+TSLA <- TSLA%>%mutate(Date = as.Date(Date)) %>%
+  complete(Date = seq.Date(min(Date), max(Date), by="day"))
+names(TSLA) <- c('Date', 'Open','High','Low','Close','Volume','Adj.Close')
+```
+
+#2.   DATA PREPROCESSING:
+
+**Addition variables** are *TrueRange*, *Company_Name* and *Growth*. *TrueRange* is High minus Low. This tracks the volatility of stock.This an important variables because, day trader relies on the price variation to make profits, a stock with high TrueRange compared to the price means a better opportunity to make profit. *Growth* is the indicator variables that tracks if closing price is higher than the opening price. *Company_Name* is an indicator variable which makes it easy for us to group the data and manipulate the data with respect to the company name.
+
+
+```{r}
+XEL <- XEL%>%mutate(Company_Name = "XEL")
+AAPL <- AAPL%>%mutate(Company_Name="AAPL")
+CVS <- CVS%>%mutate(Company_Name ="CVS")
+KO <- KO%>%mutate(Company_Name ="KO")
+PSX <- PSX%>%mutate(Company_Name = "PSX")
+TSLA <- TSLA%>%mutate(Company_Name ="TSLA")
+# XEL = XEL%>% mutate(Day = day(Date))
+Growth.Function = function(net){
+  ifelse(net>= 0, 1,0)
+}
+XEL['Growth'] <- Growth.Function(XEL$Close-XEL$Open)
+
+XEL <- XEL%>% mutate(TrueRange = High-Low)
+head(XEL)
+XEL['Growth'] <-  Growth.Function(XEL$Close-XEL$Open)
+
+PSX = PSX%>% mutate(TrueRange = High-Low)
+head(PSX)
+PSX['Growth'] <- Growth.Function(PSX$Close-PSX$Open)
+
+PSX = PSX%>% mutate(TrueRange = High-Low)
+head(PSX)
+KO['Growth'] <- Growth.Function(KO$Close-KO$Open)
+
+KO = KO%>% mutate(TrueRange = High-Low)
+head(KO)
+AAPL['Growth'] <- Growth.Function(AAPL$Close-AAPL$Open)
+
+AAPL = AAPL%>% mutate(TrueRange = High-Low)
+head(AAPL)
+CVS['Growth'] <- Growth.Function(CVS$Close-CVS$Open)
+
+CVS = CVS%>% mutate(TrueRange = High-Low)
+head(CVS)
+TSLA['Growth'] <- Growth.Function(TSLA$Close-TSLA$Open)
+
+TSLA = TSLA%>% mutate(TrueRange = High-Low)
+head(TSLA)
+
+```
+
+#2.1    Spliting Train and Test datasets
+
+The time series data (usually) exhibits strong serial auto-correlation, so if we put the price for one day in the training set, and the next days price the test set they're a long way from independent and the test error is biased. Therefore we introduce a gap between the train and test dataset.
+
+
+```{r}
+XEL_train <-head(XEL,round(0.65*nrow(XEL))) 
+XEL_test <- tail(XEL,round(0.30*nrow(XEL)))
+AAPL_train <-head(AAPL,round(0.65*nrow(AAPL))) 
+AAPL_test <- tail(AAPL,round(0.30*nrow(AAPL)))
+TSLA_train <-head(TSLA,round(0.65*nrow(AAPL))) 
+TSLA_test <- tail(TSLA,round(0.30*nrow(AAPL)))
+CVS_train <-head(CVS,round(0.65*nrow(CVS))) 
+CVS_test <- tail(CVS,round(0.30*nrow(CVS)))
+PSX_train <-head(PSX,round(0.65*nrow(PSX))) 
+PSX_test <- tail(PSX,round(0.30*nrow(PSX)))
+KO_train <-head(KO,round(0.65*nrow(KO))) 
+KO_test <- tail(KO,round(0.30*nrow(KO)))
+```
+
+
+#As I wanted to predict the EPS (Earnings per Share) for the next quarter and EPS column is not available in Yahoo data source, I web scrapped the EPS from yahoo using 'rvest' library. The table available in the website is quarterly data. Though, I wasnt able to interpret th model to my statisfaction.
+
+```{r}
+webscrap_Tesla <- read_html("https://www.macrotrends.net/stocks/charts/TSLA/tesla/eps-earnings-per-share-diluted")
+tables_webscrap_Tesla <-webscrap_Tesla%>% html_table(fill = TRUE)
+   webscrap_Tesla_table <- tables_webscrap_Tesla[[2]]
+    names(webscrap_Tesla_table) <- c("Date", "EPS")
+    webscrap_Tesla_table
+webscrap_Apple <- read_html("https://www.macrotrends.net/stocks/charts/AAPL/apple/eps-earnings-per-share-diluted")
+tables_webscrap_Apple <-webscrap_Apple%>% html_table(fill = TRUE)
+   webscrap_Apple_table <- tables_webscrap_Apple[[2]]
+    names(webscrap_Apple_table) <- c("Date", "EPS")
+    webscrap_Apple_table
+webscrap_Phillips66 <- read_html("https://www.macrotrends.net/stocks/charts/PSX/phillips-66/eps-earnings-per-share-diluted")
+tables_webscrap_Phillips66 <-webscrap_Phillips66%>% html_table(fill = TRUE)
+   webscrap_Phillips66_table <- tables_webscrap_Phillips66[[2]]
+    names(webscrap_Phillips66_table) <- c("Date", "EPS")
+    webscrap_Phillips66_table
+webscrap_CocaCola <- read_html("https://www.macrotrends.net/stocks/charts/KO/cocacola/eps-earnings-per-share-diluted")
+tables_webscrap_CocaCola <-webscrap_CocaCola%>% html_table(fill = TRUE)
+  webscrap_CocaCola_table <- tables_webscrap_CocaCola[[2]]
+    names(webscrap_CocaCola_table) <- c("Date", "EPS")
+    webscrap_CocaCola_table
+webscrap_CVS <- read_html("https://www.macrotrends.net/stocks/charts/CVS/cvs-health/eps-earnings-per-share-diluted")
+tables_webscrap_CVS <-webscrap_CVS%>% html_table(fill = TRUE)
+   webscrap_CVS_table <- tables_webscrap_CVS[[2]]
+    names(webscrap_CVS_table) <- c("Date", "EPS")
+    webscrap_CVS_table
+webscrap_Xcel <- read_html("https://www.macrotrends.net/stocks/charts/XEL/xcel-energy/eps-earnings-per-share-diluted")
+tables_webscrap_Xcel <-webscrap_Xcel%>% html_table(fill = TRUE)
+   webscrap_Xcel_table <- tables_webscrap_Xcel[[2]]
+    names(webscrap_Xcel_table) <- c("Date", "EPS")
+    webscrap_Xcel_table
+```
+
+## Formatting the columns to the original data frame column's format, because we need to merge it to the original dataset.
+
+```{r}
+webscrap_Phillips66_table$Date <- (as.Date(webscrap_Phillips66_table$Date, format= "%Y-%m-%d"))
+webscrap_Phillips66_table %>% arrange(ymd(webscrap_Phillips66_table$Date))
+webscrap_Tesla_table$Date <- (as.Date(webscrap_Tesla_table$Date, format= "%Y-%m-%d"))
+webscrap_Tesla_table %>% arrange(ymd(webscrap_Tesla_table$Date))
+webscrap_Apple_table$Date <- (as.Date(webscrap_Apple_table$Date, format= "%Y-%m-%d"))
+webscrap_Apple_table %>% arrange(ymd(webscrap_Apple_table$Date))
+webscrap_CVS_table$Date <- (as.Date(webscrap_CVS_table$Date, format= "%Y-%m-%d"))
+webscrap_CVS_table %>% arrange(ymd(webscrap_CVS_table$Date))
+webscrap_CocaCola_table$Date <- (as.Date(webscrap_CocaCola_table$Date, format= "%Y-%m-%d"))
+webscrap_CocaCola_table %>% arrange(ymd(webscrap_CocaCola_table$Date))
+webscrap_Xcel_table$Date <- (as.Date(webscrap_Xcel_table$Date, format= "%Y-%m-%d"))
+webscrap_Xcel_table %>% arrange(ymd(webscrap_Xcel_table$Date))
+```
+#In order to merge this to the original data, we shoudl have all the dates in the year to be present or else we will be loosing lot of data. So I created a data frame with only dates and merged it with the web scrapped data.
+```{r}
+Date<-seq(as.Date("2009-03-06"),as.Date("2022-03-31"),by = 1)
+Dates_df<-as.data.frame(Date)
+```
+
+
+
+#2.2    Handling Missing Values in Web Scrapped data
+
+#I used LOCF method to handle the missing values as EPS for the next quarter is the same.
+```{r}
+webscrap_CVS_table_merged <- merge(x = webscrap_CVS_table,y = Dates_df,  by = 'Date', all.y = TRUE)
+webscrap_CVS_table_merged <- webscrap_CVS_table_merged %>% 
+  fill(Date, EPS, .direction = "up")
+webscrap_CVS_table_merged<-webscrap_CVS_table_merged%>%mutate(EPS = EPS %>% str_remove_all("\\$"))
+webscrap_CVS_table_merged<-webscrap_CVS_table_merged%>%mutate(EPS = as.numeric(EPS))
+webscrap_CocaCola_table_merged <- merge(x = webscrap_CocaCola_table,y = Dates_df,  by = 'Date', all.y = TRUE)
+webscrap_CocaCola_table_merged <- webscrap_CocaCola_table_merged %>% 
+  fill(Date, EPS, .direction = "up")
+webscrap_CocaCola_table_merged<-webscrap_CocaCola_table_merged%>%mutate(EPS = EPS %>% str_remove_all("\\$"))
+webscrap_CocaCola_table_merged<-webscrap_CocaCola_table_merged%>%mutate(EPS = as.numeric(EPS))
+webscrap_Apple_table_merged <- merge(x = webscrap_Apple_table,y = Dates_df,  by = 'Date', all.y = TRUE)
+webscrap_Apple_table_merged <- webscrap_Apple_table_merged %>% 
+  fill(Date, EPS, .direction = "up")
+webscrap_Apple_table_merged<-webscrap_Apple_table_merged%>%mutate(EPS = EPS %>% str_remove_all("\\$"))
+webscrap_Apple_table_merged<-webscrap_Apple_table_merged%>%mutate(EPS = as.numeric(EPS))
+webscrap_Tesla_table_merged <- merge(x = webscrap_Tesla_table,y = Dates_df,  by = 'Date', all.y = TRUE)
+webscrap_Tesla_table_merged <- webscrap_Tesla_table_merged %>% 
+  fill(Date, EPS, .direction = "up")
+webscrap_Tesla_table_merged<-webscrap_Tesla_table_merged%>%mutate(EPS = EPS %>% str_remove_all("\\$"))
+webscrap_Tesla_table_merged<-webscrap_Tesla_table_merged%>%mutate(EPS = as.numeric(EPS))
+webscrap_Phillips66_table_merged <- merge(x = webscrap_Phillips66_table,y = Dates_df,  by = 'Date', all.y = TRUE)
+webscrap_Phillips66_table_merged <- webscrap_Phillips66_table_merged %>% 
+  fill(Date, EPS, .direction = "up")
+webscrap_Phillips66_table_merged<-webscrap_Phillips66_table_merged%>%mutate(EPS = EPS %>% str_remove_all("\\$"))
+webscrap_Phillips66_table_merged<-webscrap_Phillips66_table_merged%>%mutate(EPS = as.numeric(EPS))
+webscrap_Xcel_table_merged <- merge(x = webscrap_Xcel_table,y = Dates_df,  by = 'Date', all.y = TRUE)
+webscrap_Xcel_table_merged <- webscrap_Xcel_table_merged %>% 
+  fill(Date, EPS, .direction = "up")
+webscrap_Xcel_table_merged<-webscrap_Xcel_table_merged%>%mutate(EPS = EPS %>% str_remove_all("\\$"))
+webscrap_Xcel_table_merged<-webscrap_Xcel_table_merged%>%mutate(EPS = as.numeric(EPS))
+```
+
+
+##Merging the Web scrapped data with the original data and dividing train and test data sets.
+```{r}
+
+F_TSLA <- merge(TSLA, webscrap_Tesla_table_merged
+, by = "Date")
+#F_TSLA<-F_TSLA%>%mutate(TSLA.PE = ifelse(TSLA.EPS<=0, 0, TSLA.Close/TSLA.EPS))
+F_TSLA_train <-head(F_TSLA,round(0.65*nrow(F_TSLA))) 
+F_TSLA_test <- tail(F_TSLA,round(0.30*nrow(F_TSLA)))
+F_CVS <- merge(CVS, webscrap_CVS_table_merged
+, by = "Date")
+#F_CVS<-F_CVS%>%mutate(CVS.PE = ifelse(CVS.EPS<=0, 0, CVS.Close/CVS.EPS))
+F_CVS_train <-head(F_CVS,round(0.65*nrow(F_CVS))) 
+F_CVS_test <- tail(F_CVS,round(0.30*nrow(F_CVS)))
+F_KO <- merge(KO, webscrap_CocaCola_table_merged
+, by = "Date")
+#F_KO<-F_KO%>%mutate(KO.PE = ifelse(KO.EPS<=0, 0, KO.Close/KO.EPS))
+F_KO_train <-head(F_KO,round(0.65*nrow(F_KO))) 
+F_KO_test <- tail(F_KO,round(0.30*nrow(F_KO)))
+
+F_XEL <- merge(XEL, webscrap_Xcel_table_merged
+, by = "Date")
+#F_XEL<-F_XEL%>%mutate(XEL.PE = ifelse(XEL.EPS<=0, 0, XEL.Close/XEL.EPS))
+F_XEL_train <-head(F_XEL,round(0.65*nrow(F_XEL))) 
+F_XEL_test <- tail(F_XEL,round(0.30*nrow(F_XEL)))
+F_AAPL <- merge(AAPL, webscrap_Apple_table_merged
+, by = "Date")
+#F_AAPL<-F_AAPL%>%mutate(AAPL.PE = ifelse(AAPL.EPS<=0, 0, AAPL.Close/AAPL.EPS))
+F_AAPL_train <-head(F_AAPL,round(0.65*nrow(F_AAPL))) 
+F_AAPL_test <- tail(F_AAPL,round(0.30*nrow(F_AAPL)))
+F_PSX <- merge(PSX, webscrap_Phillips66_table_merged
+, by = "Date")
+#F_PSX<-F_PSX%>%mutate(PSX.PE = ifelse(PSX.EPS<=0, 0, PSX.Close/PSX.EPS))
+F_PSX_train <-head(F_PSX,round(0.65*nrow(F_PSX))) 
+F_PSX_test <- tail(F_PSX,round(0.30*nrow(F_PSX)))
+```
+
+##  Combining all the companies data into a single data set which will make the EDA much easier.
+
+```{r}
+F_df <- rbind(F_XEL,F_CVS,F_KO,F_AAPL,F_PSX,F_TSLA)
+F_df_train <- rbind(F_XEL_train,F_CVS_train,F_KO_train,F_TSLA_train,F_AAPL_train,F_PSX_train)
+F_df_test <- rbind(F_XEL_test,F_CVS_test,F_KO_test,F_TSLA_train,F_AAPL_test,F_PSX_test)
+```
+
+## It is always easy to model numeric columns so giving ID to the Comapny_Names.
+```{r}
+F_df <- transform(F_df,Company_ID = as.numeric(factor(Company_Name)))
+head(F_df,2)
+F_df_train <- transform(F_df_train,Company_ID = as.numeric(factor(Company_Name)))
+
+F_df_test <- transform(F_df_test,Company_ID = as.numeric(factor(Company_Name)))
+
+```
+#2.3     DATA CLEANING
+
+```{r}
+sum(is.na(as.matrix(F_df)))
+```
+
+## Using Spline interpolation: This method rely on the assumption that adjacent observations are similar to one another.
+### In time series data, if there are missing values, there are two ways to deal with the incomplete data:
+#1. omit the entire record that contains information.
+#2. Impute the missing information.
+### Since the time series data has temporal property, only some of the statistical methodologies are appropriate for time series data.
+
+```{r}
+require(zoo)
+#df <- df%>%mutate(rolling_7days = zoo::rollmean(Close, k = 7, fill = NA))
+df1 <- F_df %>%group_by(Company_Name)%>%mutate(Close = na.spline(Close),Open = na.spline(Open),High = na.spline(High),Low = na.spline(Low),Volume = na.spline(Volume),EPS = na.spline(EPS),TrueRange = na.spline(TrueRange),Adj.Close = na.spline(Adj.Close))%>%ungroup()
+df1 <- df1%>%mutate(rolling_7days = zoo::rollmean(Close, k = 7, fill = NA))
+df1_train <- F_df_train %>%group_by(Company_Name)%>%mutate(Close = na.spline(Close),Open = na.spline(Open),High = na.spline(High),Low = na.spline(Low),Volume = na.spline(Volume),TrueRange = na.spline(TrueRange),EPS = na.spline(EPS),Adj.Close = na.spline(Adj.Close))%>%ungroup()
+df1_train <- df1%>%mutate(rolling_7days = zoo::rollmean(Close, k = 7, fill = NA))
+df1_test <- F_df_test %>%group_by(Company_Name)%>%mutate(Close = na.spline(Close),Open = na.spline(Open),High = na.spline(High),Low = na.spline(Low),Volume = na.spline(Volume),TrueRange = na.spline(TrueRange),EPS = na.spline(EPS),Adj.Close = na.spline(Adj.Close))%>%ungroup()
+df1_test <- df1_test%>%mutate(rolling_7days = zoo::rollmean(Close, k = 7, fill = NA))
+head(df1,4)
+```
+
+
+```{r}
+df1 <- df1%>%group_by(Company_Name)%>%mutate(rolling_7days = na.spline(rolling_7days))%>%ungroup()
+
+df1_train <- df1_train%>%group_by(Company_Name)%>%mutate(rolling_7days = na.spline(rolling_7days))%>%ungroup()
+
+df1_test <- df1_test%>%group_by(Company_Name)%>%mutate(rolling_7days = na.spline(rolling_7days))%>%ungroup()
+head(df1)
+```
+
+### For the growth column, as it is based on whether or not grown, I have replaced NA values with 0, where the corresponding columns had NA values.
+
+```{r}
+df1 <- df1 %>% mutate_at(9, ~replace_na(.,0))
+df1_train <- df1_train %>% mutate_at(9, ~replace_na(.,0))
+df1_test <- df1_test %>% mutate_at(9, ~replace_na(.,0))
+head(df1)
+```
+
+#3.   EXPLORATORY DATA ANALYSIS:
+
+### I dropped out two companies(GOOG, TSLA) because they both had very high Closing price which made the visualization uninterpretable. 
+
+```{r}
+set.seed(1)
+df2 <- df1%>%group_by(Date,Company_ID)%>%summarise(EPS,Company_Name,Date,Close)%>%filter(Date>='2019-01-01' & (Company_ID <=4 | Company_ID==6))
+xyplot(x=Close ~ Date|df2$Company_Name, type='l', data = df2, scales=list(alternating=FALSE, tck=1:0))
+xyplot(Close ~ Date, groups=df2$Company_Name, data = df2, type = "l",group = df2$Company_Name, auto.key = TRUE)
+```
+Above, Graph represents Close price with respect to Dates for 5 companies of different sectors.
+
+## Another plot to represent EPS wrt. Date
+
+```{r}
+xyplot(EPS ~  Date|df2$Company_Name, data=df2,  type='l',scales=list(alternating=FALSE, tck=1:0))
+```
+
+The above plot represents the EPS with respect to the Date and how it varies for different sector. 
+We can visibly see that PSX(Phillips66-energy sector), has hiked after Feb 2022(after the war outbreak)
+
+
+## Plotting Growth with respect to the date.
+Growth is a binomial(0 or 1) attribute.
+```{r}
+plot(df1$Date,df1$Growth)
+```
+
+## TIME SERIES FORECASTING:
+
+### Prophet is a procedure for forecasting time series data based on an additive model where non-linear trends are fit with yearly, weekly, and daily seasonality, plus holiday effects.
+
+#Here for this forecasting I have taken three companies each of differnt sector that will clearly indicate the difference in the Stock Closing price
+```{r}
+ds <- df2$Date
+ID <- df2$Company_ID
+y <- df2$Close
+df_prophet <- data.frame(ds, ID, y)
+df_prophet_CVS <- df_prophet%>%filter(ID==1)
+df_prophet_PSX <- df_prophet%>%filter(ID==3)
+df_prophet_XEL <- df_prophet%>%filter(ID==4)
+head(df_prophet_XEL)
+```
+
+## We need to first make a Prophet model (m) based on the data  and have it make an empty future dataframe (future) for our desired number of periods (days in our case) that will be forecast. Here I have taken 90days i.e 3 months.
+
+```{r}
+m_CVS <- prophet(df_prophet_CVS, daily.seasonality=TRUE)
+m_PSX <- prophet(df_prophet_PSX, daily.seasonality=TRUE)
+m_XEL <- prophet(df_prophet_XEL, daily.seasonality=TRUE)
+
+future_CVS <- make_future_dataframe(m_CVS, periods=180)
+forecast_CVS <- predict(m_CVS, periods=180, future_CVS)
+plot(m_CVS, forecast_CVS)
+prophet_plot_components(m_CVS, forecast_CVS)
+```
+
+The above plot is the Forecasting plot for CVS pharmacy(Health care Sector).
+We can see that there was an unexpected price drop in Feb 2022 by looking at the black dots dropping below the forecast (blue cast window).
+
+## We need to first make a Prophet model (m) based on the data  and have it make an empty future dataframe (future) for our desired number of periods (days in our case) that will be forecast. Here I have taken 180days i.e 6 months.
+
+```{r}
+future_PSX <- make_future_dataframe(m_PSX, periods=90)
+forecast_PSX <- predict(m_PSX, periods=90, future_PSX)
+plot(m_PSX, forecast_PSX)
+prophet_plot_components(m_PSX, forecast_PSX)
+```
+The above plot is the Forecasting plot for Phillips66 or PSX (Energy Sector).
+We can see that there was a price hike in Feb 2021 by looking at the black dots hiking below the forecast (blue cast window).
+
+```{r}
+future_XEL <- make_future_dataframe(m_XEL, periods=90)
+forecast_XEL <- predict(m_XEL, periods=90, future_XEL)
+plot(m_XEL, forecast_XEL)
+prophet_plot_components(m_XEL, forecast_XEL)
+```
+
+The above plot is the Forecasting plot for Xcel Energy or XEL or PSX (utilities Sector).
+We can see that there was  price drop in Feb 2021 by looking at the black dots dropping below the forecast (blue cast window).
+
+
+In the above Forecasting plots,
+1.  the black dots represent actual measurements
+2.  blue line displays Prophet’s forecast
+3.  light blue window indicates uncertainty intervals
+
+
+# Prophet time series for grouped data i.e representing all the trends in a single data. However I wasn't able to find a solution for plotting the grouped data forecasting.
+
+
+```{r}
+
+data = df_prophet %>%  
+       group_by(ID) %>%
+       do(predict(prophet(.), make_future_dataframe(prophet(.)
+                                                    
+                                                  , periods = 7))) 
+data <- data %>% group_by(ID) %>% 
+         top_n(7, ds)
+tail(data[c('ds', 'yhat', 'yhat_lower', 'yhat_upper')])
+
+```
+
+ds — date being forecast.
+yhat — prediction for y value (number of views) that day.
+yhat_lower — lowest expected value for that day’s predicted y value range.
+yhat_upper — highest expected value for that day’s predicted y value range.
+
+#4.   CANDLESTICK CHART 
+
+For a detailed understanding of the Close, Open, High, Low and Date of the stock market data.
+
+I have visualized Phillips66(PSX) and Xcel Energy(XEL) using candelstick cahrt.
+
+```{r}
+df1_candlestick_PSX <- df1%>%filter(Company_Name == 'PSX'&Date>='2022-01-01')
+fig1 <- df1_candlestick_PSX %>%plot_ly(x = ~Date, type = "candlestick", 
+                       open = ~df1_candlestick_PSX$Open,
+                       close = ~df1_candlestick_PSX$Close, 
+                       high = ~df1_candlestick_PSX$High,
+                       low = ~df1_candlestick_PSX$Low)
+fig1 <- fig1%>% layout(title = "Basic Candlestick Chart Phillips66")
+fig1
+df1_candlestick_XEL <- df1%>%filter(Company_Name ==
+                                      'XEL'&Date>='2022-01-01')
+fig2 <- df1_candlestick_XEL %>%plot_ly(x = ~Date, type = "candlestick", 
+                       open = ~df1_candlestick_XEL$Open,
+                       close = ~df1_candlestick_XEL$Close, 
+                       high = ~df1_candlestick_XEL$High,
+                       low = ~df1_candlestick_XEL$Low)
+fig2 <- fig2%>% layout(title = "Basic Candlestick Chart Xcel Energy")
+fig2
+```
+
+
+#5.   CORRELATION MATRIX
+
+##5.1   Compute correlation matrix
+
+### A correlation matrix is a table of correlation coefficients for a set of variables used to determine if a relationship exists between the variables. The coefficient indicates both the strength of the relationship as well as the direction (positive vs. negative correlations). In this post I show you how to calculate and visualize a correlation matrix using R.
+
+```{r}
+corelation <- df1%>%summarise(Growth, TrueRange,High, Low, Open, Volume ,
+                              Close, Adj.Close, Company_ID, 
+                              rolling_7days, EPS)
+str(corelation)
+```
+```{r}
+cormat <- round(cor(corelation),9)
+head(cormat,3)
+```
+Above is the simple correlation matrix showing the correlations between pairs of variables.
+
+### The package reshape is required to melt the correlation matrix.
+```{r}
+library(reshape2)
+melted_cormat <- melt(cormat)
+head(melted_cormat)
+```
+##5.2   Visualizing the correlation matrix
+
+```{r}
+corrplot(cormat, method="color",type = "lower", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+```
+
+This relation can be expressed as a range of values expressed within the interval [-1, 1]. The value -1 indicates a perfect non-linear (negative) relationship, 1 is a perfect positive linear relationship and 0 is an intermediate between neither positive nor negative linear interdependency. However, a value of 0 doesn’t indicate the variables to be independent of each other completely.
+
+
+#6.   MODELLING 
+
+##6.1   Linear Regression:
+#for EPS as the target and all the other variables as the predictors. Using OLS to visualize in table how the model will be after adding or removing any predictor. 
+```{r}
+library(olsrr)
+library(car)
+F_df_PSX <- df1%>%filter(Company_Name=='PSX')
+
+F_df_train_PSX <- df1_train%>%filter(Company_Name=='PSX')
+
+F_df_test_PSX <- df1_test%>%filter(Company_Name=='PSX')
+
+model_PSX <- lm(EPS ~ Volume+Date+Close+High, data = F_df_train_PSX)
+ols_step_best_subset(model_PSX)
+vif(model_PSX)
+
+```
+
+Usnig VIF function identifying if any predictor has correlation.
+In the above model I have selected only the Phillips66 (PSX) which hiked after the conflict for modelling.
+
+##6.2   Mean Squared Error
+
+### Calculating mean squared error to find whether this model is accurate or not.
+
+```{r}
+mse_PSX<- mean((F_df_test_PSX$EPS - predict(model_PSX, 
+                                            newdata = F_df_test_PSX, 
+                                            type="response"))^2)
+mse_PSX
+```
+##6.3     GENERALIZED LINEAR MODELLING(GLM)
+
+###The GLM generalizes linear regression by allowing the linear model to be related to the response variable via a link function and by allowing the magnitude of the variance of each measurement to be a function of its predicted value. Here Growth variable follows binomial distribution
+
+##6.3.1   MODEL-1 FOR GROWTH:
+###Models for indicating the growth(as the target) or the stock price in a day for the PSX_train data.
+
+```{r}
+glmod_PSX_growth <- glm(Growth~Date+Close+High+Volume+EPS+Low, 
+                        data = F_df_train_PSX, family = 'binomial' )
+summary(glmod_PSX_growth)
+mse_glmod_PSX<- mean((F_df_test_PSX$Growth- predict(glmod_PSX_growth, 
+                                            newdata = F_df_test_PSX, 
+                                            type="response"))^2)
+mse_glmod_PSX
+plot(glmod_PSX_growth)
+```
+From the above summary it is interpreted that Dated has no significant towards the target and the predictor High has little significant.
+The above value is the Mean Square error for the model which is .1800426
+
+##6.3.2   MODEL-2 FOR GROWTH:
+
+```{r}
+glmod_PSX1_growth <- glm(Growth~Close+High+Volume+Date+EPS, 
+                         data = F_df_train_PSX, family = 'binomial' )
+summary(glmod_PSX1_growth)
+mse_glmod_PSX1<- mean((F_df_test_PSX$Growth- predict(glmod_PSX1_growth, 
+                                            newdata = F_df_test_PSX, 
+                                            type="response"))^2)
+mse_glmod_PSX1
+plot(glmod_PSX1_growth)
+```
+The above value is the Mean Square error for the second model which is 0.193059.
+
+
+##6.3.3   Comparing model using Anova 
+### The anova() function will take the model objects as arguments, and return an ANOVA testing whether the more complex model is significantly better at capturing the data than the simpler model.
+
+```{r}
+anova(glmod_PSX_growth,glmod_PSX1_growth, test = 'Chisq')
+```
+Based on this anova Chisq test, smaller model is better than the bigger model.
+
+
+##6.4   GLM FOR EPS AS TARGET
+
+Taking EPS as the target variable and performing the glm modelling as we did for growth as the target
+
+```{r}
+glmod_EPS_PSX <- glm(EPS~Date+Close+High+Volume+Growth+Low, 
+                 data = F_df_train_PSX, family = 'gaussian' )
+summary(glmod_EPS_PSX)
+mse_glmod_PSX11<- mean((F_df_test_PSX$EPS- predict(glmod_EPS_PSX, 
+                                            newdata = F_df_test_PSX, 
+                                            type="response"))^2)
+mse_glmod_PSX11
+plot(glmod_EPS_PSX)
+```
+The above value is the Mean Square error for the second model which is 5.504887.
+
+```{r}
+glmod_EPS_PSX1 <- glm(EPS~Date+Close+High+Volume, 
+                  data = F_df_train_PSX, family = 'gaussian' )
+summary(glmod_EPS_PSX1)
+mse_glmod_PSX12<- mean((F_df_test_PSX$EPS- predict(glmod_EPS_PSX1, 
+                                            newdata = F_df_test_PSX, 
+                                            type="response"))^2)
+mse_glmod_PSX12
+plot(glmod_EPS_PSX1)
+```
+The above value is the Mean Square error for the second model which is 5.665055.
+
+```{r}
+anova(glmod_EPS_PSX,glmod_EPS_PSX1, test = 'Chisq')
+```
+
+Based on this anova Chisq test, smaller model is better than the bigger model.
+
+##6.5  A Model With Correlated Random Effects
+
+As EPS changes for quarter, I assumed that is as longitudinal data. Mixed effects model works better for longitudinal dataset.
+
+```{r Warning=FALSE}
+library(lme4)
+mixed_model <- glmer(EPS ~ Date +Volume+ Close+(Date | Company_Name), df1_train, family = gaussian(),
+          control = lmerControl(optimizer ="Nelder_Mead"))
+summary(mixed_model)
+```
+
+```{r}
+plot(mixed_model)
+```
+```{r}
+anova(mixed_model)
+
+```
+```{r}
+library(performance)
+performance::model_performance(mixed_model)
+```
+
+```{r}
+mse_mixed_model<- mean((df1_test$EPS - predict(mixed_model, newdata = df1_test, type="response"))^2)
+mse_mixed_model
+```
+However, the above model is not very significant as it has more mean squared error.
+
+To my understanding by evaluating all these model I find that GLMs are more effective and interpretable.
+
+#CONCLUSION
+
+In this project I have analized whether or not the stock price has grew in a day and EPS(Earnings per share) which is the earnings per share of the company for every quarter. I have created models for these two targets and identified which model is best. As Phillips66 is an company in energy sector, it is most hiked sector after the conflict and therefore I have considered for modelling.
+
+#REFERENCES
+
+###1.   https://www.kaggle.com/code/elenapetrova/time-series-analysis-and-forecasts-with-prophet/notebook
+
+###2.   https://arulvelkumar.wordpress.com/2017/07/06/confusionmatrix-function-in-r-the-data-contain-levels-not-found-in-the-data/
+###3.   https://plotly.com/r/candlestick-charts/
+###4.   https://github.com/congnguyen53/StockMarketAnalysis.R/blob/master/FinalReportRmarkdown.Rmd
+###5.   https://cran.r-project.org/web/packages/lme4/lme4.pdf
+###6.   https://www.kaggle.com/code/juejuewang/handle-missing-values-in-time-series-for-beginners/report
+###7.   http://www.css.cornell.edu/faculty/dgr2/_static/files/R_html/explainRegression.html
+###8.   https://www.r-bloggers.com/2015/01/using-rvest-to-scrape-an-html-table/
